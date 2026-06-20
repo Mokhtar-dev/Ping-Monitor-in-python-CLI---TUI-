@@ -7,21 +7,23 @@ raw_output = response.stdout
 # Loop through the output line by line to find our target
 for line in raw_output.splitlines():
     if "time=" in line:
-
         part1 = line.split("time=")[1]
         part2 = part1.split("ms")[0]
-        print(part1)
-        print(part2)
 
+ping_time = int(part2)
+print(ping_time)
 
+if ping_time > 90:
+    print(f"Ping time is greater than 90ms your ping is {ping_time} ms", ping_time)
+else:
+    print("the ping is good")
 
+    # --- YOUR FISHING CHALLENGE AREA ---
+    # 1. Split the line at "time=" and grab the right side (index 1)
+    # 2. Split that result at "ms" and grab the left side (index 0)
+    # 3. Type cast the final string into an integer
 
-        # --- YOUR FISHING CHALLENGE AREA ---
-        # 1. Split the line at "time=" and grab the right side (index 1)
-        # 2. Split that result at "ms" and grab the left side (index 0)
-        # 3. Type cast the final string into an integer
+    # Write your code here to isolate the number!
+    # ping_time = ...
 
-        # Write your code here to isolate the number!
-        # ping_time = ...
-
-        # print(f"Successfully extracted integer: {ping_time}")
+    # print(f"Successfully extracted integer: {ping_time}")
