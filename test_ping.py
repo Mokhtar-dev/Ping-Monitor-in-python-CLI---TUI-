@@ -1,29 +1,21 @@
 import subprocess
+import time
 
-print("Sending a background ping probe...")
-response = subprocess.run(["ping", "-n", "1", "8.8.8.8"], capture_output=True, text=True)
-raw_output = response.stdout
+start_time = time.time()
+end_time = time.time() + 10
 
-# Loop through the output line by line to find our target
-for line in raw_output.splitlines():
-    if "time=" in line:
-        part1 = line.split("time=")[1]
-        part2 = part1.split("ms")[0]
-
-ping_time = int(part2)
-print(ping_time)
-
-if ping_time > 90:
-    print(f"Ping time is greater than 90ms your ping is {ping_time} ms", ping_time)
-else:
-    print("the ping is good")
-
-    # --- YOUR FISHING CHALLENGE AREA ---
-    # 1. Split the line at "time=" and grab the right side (index 1)
-    # 2. Split that result at "ms" and grab the left side (index 0)
-    # 3. Type cast the final string into an integer
-
-    # Write your code here to isolate the number!
-    # ping_time = ...
-
-    # print(f"Successfully extracted integer: {ping_time}")
+print("Starting real time ping monitoring for 10 sec...")
+while time.time() < end_time:
+    response = subprocess.run(["ping", "-n", "1", "1.1.1.1"], capture_output=True, text=True)
+    raw_output = response.stdout
+    for line in raw_output.splitlines():
+        if "time=" in line:
+            part1 = line.split("time=")[1]
+            part2 = part1.split("ms")[0]
+            ping_time = int(part2)
+            if ping_time > 90:
+                print(f"Ping time is greater than 90ms your ping is {ping_time} ms")
+            else:
+                print(f"the ping is good: {ping_time}ms")
+    time.sleep(1)
+print("Successful scan no delays")
