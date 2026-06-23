@@ -35,9 +35,5 @@ class SERVER:
             time.sleep(1)
 
 
-cloud_flare = SERVER("cloud_flare", ip="1.1.1.1", threshold=90)
-Google = SERVER("Google_DNS", ip="8.8.8.8", threshold=90)
-Google.diagnostics(duration=5)
-cloud_flare.diagnostics(duration=5)
-broken_server = SERVER("Broken_Server", ip="192.0.2.1", threshold=90)
-broken_server.diagnostics(duration=5)
+google_DNs = SERVER("Gool", ip="8.8.8.8", threshold=90)
+google_DNs.diagnostics(duration=5)
