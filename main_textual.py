@@ -3,6 +3,7 @@ import subprocess
 import time
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, DataTable
+from textual import work  # <--- NEW: Import the threading worker worker framework
 
 
 # ==========================================
@@ -49,7 +50,6 @@ class NetworkMonitorApp(App):
     def __init__(self, servers):
         super().__init__()
         self.servers = servers
-        # Storage for our dynamic column keys
         self.col_latency = None
         self.col_status = None
 
@@ -62,10 +62,9 @@ class NetworkMonitorApp(App):
         table = self.query_one(DataTable)
         table.cursor_type = "row"
 
-        # FIX: Capture the assigned column keys directly from Textual!
         columns = table.add_columns("Server Name", "IP Address", "Warning Threshold", "Current Latency", "Status")
-        self.col_latency = columns[3]  # Maps exactly to "Current Latency"
-        self.col_status = columns[4]  # Maps exactly to "Status"
+        self.col_latency = columns[3]
+        self.col_status = columns[4]
 
         for server in self.servers:
             table.add_row(
@@ -77,14 +76,23 @@ class NetworkMonitorApp(App):
                 key=server.name
             )
 
-        self.set_interval(1.5, self.update_dashboard_metrics)
+        # Background timer fires our worker function every 1.5 seconds
+        self.set_interval(1.5, self.run_background_pings)
 
-    def update_dashboard_metrics(self) -> None:
-        table = self.query_one(DataTable)
-
+    @work(thread=True)  # <--- MAGIC POWER: Offloads this entire heavy loop to a background thread!
+    def run_background_pings(self) -> None:
+        """Worker loop that handles heavy OS operations without freezing the UI."""
         for server in self.servers:
             server.check_network()
 
+        # Once the background network tasks finish, safely push the data to the UI thread
+        self.call_from_thread(self.update_ui_display)
+
+    def update_ui_display(self) -> None:
+        """Pure UI function that instantly updates the table cell graphics."""
+        table = self.query_one(DataTable)
+
+        for server in self.servers:
             if "❌" in server.status:
                 status_styled = f"[b red]{server.status}[/b red]"
                 latency_styled = "[red]---[/red]"
@@ -95,7 +103,6 @@ class NetworkMonitorApp(App):
                 status_styled = f"[b green]{server.status}[/b green]"
                 latency_styled = f"[green]{server.last_ping}[/green]"
 
-            # FIX: Use the native ColumnKey objects instead of raw strings!
             table.update_cell(server.name, self.col_latency, latency_styled)
             table.update_cell(server.name, self.col_status, status_styled)
 
@@ -104,7 +111,6 @@ class NetworkMonitorApp(App):
 # 3. APPLICATION LAUNCHPAD
 # ==========================================
 if __name__ == "__main__":
-    # Bootstrapper to pop out of the restrictive IDE terminal pane
     if not sys.stdin.isatty() and len(sys.argv) == 1:
         subprocess.Popen(["cmd", "/c", "start", sys.executable, __file__, "--external"])
         sys.exit()
